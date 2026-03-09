@@ -9,3 +9,4 @@ __pycache__/
 # Ignore heavy folders
 node_modules/
 .next/
+docs/

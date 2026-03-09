@@ -1,15 +1,14 @@
 import "./globals.css";
 
 export const metadata = {
-  title: "STEM Collaborative Workspace",
-  description: "Built for AI Hackathon",
+  title: "ResNex AI — Collaborative Research Workspace",
+  description: "AI-native collaborative research workspace for teams",
 };
 
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      {/* suppressHydrationWarning stops Grammarly from breaking the page */}
-      <body suppressHydrationWarning={true}>
+      <body suppressHydrationWarning={true} className="antialiased">
         {children}
       </body>
     </html>
