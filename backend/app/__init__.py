@@ -1,1 +1,0 @@
-"""ResNex backend application package."""

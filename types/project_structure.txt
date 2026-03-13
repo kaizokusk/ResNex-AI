@@ -1,0 +1,137 @@
+dashboard_0_3/
+├── Dockerfile
+├── imposter-syndrome-spec.md
+├── next-env.d.ts
+├── next.config.js
+├── package.json
+├── postcss.config.js
+├── proxy.ts
+├── README.md
+├── SPEC_LATEX_TEMPLATES.md
+├── SPEC_LATEX.md
+├── SPEC.md
+├── tailwind.config.js
+├── tsconfig.json
+├── UI_DESIGN_CHOICES.md
+├── WORKSPACE_DOCUMENTATION.md
+├── app/
+│   ├── globals.css
+│   ├── layout.tsx
+│   ├── page.tsx
+│   ├── api/
+│   │   ├── ai/
+│   │   ├── auth/
+│   │   ├── integrations/
+│   │   ├── projects/
+│   │   ├── uploadthing/
+│   │   └── user/
+│   ├── dashboard/
+│   │   ├── layout.tsx
+│   │   └── page.tsx
+│   ├── login/
+│   │   └── page.tsx
+│   └── project/
+│       └── [id]/
+├── components/
+│   ├── chat/
+│   │   ├── AgentPanel.tsx
+│   │   ├── AgentPopover.tsx
+│   │   ├── AgentResultCard.tsx
+│   │   └── ChatInput.tsx
+│   ├── contributors/
+│   │   ├── ContributionCharts.tsx
+│   │   ├── ContributionHeatmap.tsx
+│   │   ├── ContributorsTable.tsx
+│   │   └── Timeline.tsx
+│   ├── dashboard/
+│   │   ├── ContributionStatus.tsx
+│   │   └── StreakCard.tsx
+│   ├── latex/
+│   │   ├── AddCellButton.tsx
+│   │   ├── CellEditor.tsx
+│   │   ├── ConflictBanner.tsx
+│   │   ├── ConvertButton.tsx
+│   │   ├── FileTree.tsx
+│   │   ├── FileTreeItem.tsx
+│   │   ├── MonacoEditor.tsx
+│   │   ├── PdfPreview.tsx
+│   │   ├── TemplatePicker.tsx
+│   │   ├── TopActionBar.tsx
+│   │   ├── WritingProgress.tsx
+│   │   └── cells/
+│   ├── layout/
+│   │   ├── PageHeader.tsx
+│   │   └── Sidebar.tsx
+│   ├── library/
+│   │   ├── TagFilter.tsx
+│   │   └── TagInput.tsx
+│   ├── output/
+│   │   └── ShareToClassroom.tsx
+│   ├── project/
+│   │   └── ModerationAlerts.tsx
+│   ├── ui/
+│   │   └── index.tsx
+│   └── workspace/
+│       ├── CitationPicker.tsx
+│       ├── CitationWarnings.tsx
+│       ├── PersonalResearchAgent.tsx
+│       ├── QualityCheck.tsx
+│       ├── SocraticPrompt.tsx
+│       ├── TipTapEditor.tsx
+│       └── VersionHistory.tsx
+├── lib/
+│   ├── auth.ts
+│   ├── cell-types.ts
+│   ├── claude.ts
+│   ├── embeddings.ts
+│   ├── equation-ocr.ts
+│   ├── firebase.ts
+│   ├── guardrails.ts
+│   ├── latex-template-assets.ts
+│   ├── llm.ts
+│   ├── moderation.ts
+│   ├── pdf.ts
+│   ├── pollinations.ts
+│   ├── prisma.ts
+│   ├── semanticSearch.ts
+│   ├── socket.ts
+│   ├── uploadthing.ts
+│   ├── uploadthingClient.ts
+│   ├── agents/
+│   │   ├── biasAgent.ts
+│   │   ├── chatSummarizerAgent.ts
+│   │   ├── citationAgent.ts
+│   │   ├── classifier.ts
+│   │   ├── equationAgent.ts
+│   │   ├── figureAgent.ts
+│   │   ├── index.ts
+│   │   ├── latexAgent.ts
+│   │   ├── latexAutofillAgent.ts
+│   │   ├── latexConversionAgent.ts
+│   │   ├── mergeAgent.ts
+│   │   ├── orchestratorAgent.ts
+│   │   └── ... (additional agent files)
+│   ├── citations/
+│   │   └── ... (additional citation files)
+│   ├── integrations/
+│   │   └── ... (additional integration files)
+│   ├── latex-templates/
+│   ├── llm/
+│   ├── papers/
+│   ├── quality/
+│   ├── sections/
+│   └── streaks/
+├── prisma/
+│   ├── schema.prisma
+│   ├── seed.ts
+│   └── migrations/
+├── socket-server/
+│   ├── index.ts
+│   └── package.json
+├── store/
+│   ├── agentStore.ts
+│   ├── latexStore.ts
+│   ├── projectStore.ts
+│   └── userStore.ts
+└── types/
+    └── index.ts

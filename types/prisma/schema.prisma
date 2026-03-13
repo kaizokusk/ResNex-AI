@@ -1,0 +1,415 @@
+// prisma/schema.prisma
+// MODULE 1: Full DB schema for ResearchCollab
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
+}
+
+datasource db {
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")
+  directUrl  = env("DIRECT_URL")
+  extensions = [pgvector(map: "vector")]
+}
+
+enum ProjectStatus {
+  draft
+  active
+  review
+  merged
+  done
+}
+
+enum MemberRole {
+  admin
+  member
+}
+
+enum SectionStatus {
+  not_started
+  in_progress
+  submitted
+  approved
+}
+
+enum LatexFileType {
+  CODE
+  IMAGE
+  DATA
+}
+
+enum ContributionAction {
+  created
+  edited
+  ai_prompted
+  reviewed
+  merged
+}
+
+enum ChatContext {
+  workspace
+  coach
+  group_chat
+}
+
+enum ModerationContext {
+  group_chat
+  workspace_chat
+  section
+  comment
+}
+
+model User {
+  id          String   @id @default(uuid())
+  clerkId     String?  @unique
+  email       String   @unique
+  full_name   String
+  affiliation String?
+  avatar_url  String?
+  language    String   @default("en")
+  created_at  DateTime @default(now())
+
+  projectMembers     ProjectMember[]
+  sections           Section[]
+  contributorshipLogs ContributorshipLog[]
+  chatMessages       ChatMessage[]
+  moderationLogs     ModerationLog[]
+  adminProjects      Project[]
+  contributionEvents ContributionEvent[]
+  milestoneAchievements MilestoneAchievement[]
+  reflectionEntries     ReflectionEntry[]
+}
+
+model Project {
+  id          String        @id @default(uuid())
+  title       String
+  description String
+  topic       String
+  status      ProjectStatus @default(draft)
+  admin_id    String
+  created_at  DateTime      @default(now())
+
+  admin              User                 @relation(fields: [admin_id], references: [id])
+  members            ProjectMember[]
+  sections           Section[]
+  contributorshipLogs ContributorshipLog[]
+  chatMessages       ChatMessage[]
+  moderationLogs     ModerationLog[]
+  moderationAlerts   ModerationAlert[]
+  documentChunks     DocumentChunk[]
+  papers             Paper[]
+  finalOutput        FinalOutput?
+  latexDocument      LatexDocument?
+  agentPanelItems    AgentPanelItem[]
+  dailyContributions DailyContribution[]
+  contributorshipNew ContributorshipNew[]
+  latexAssets        LatexAsset[]
+  latexFiles         LatexFile[]
+  pdfUrl             String?
+  latexTemplateId    String?
+  teamStreak         Int      @default(0)
+  longestStreak      Int      @default(0)
+  lastStreakDate     DateTime?
+  contributionEvents ContributionEvent[]
+  milestoneAchievements MilestoneAchievement[]
+  reflectionEntries     ReflectionEntry[]
+}
+
+model ContributionEvent {
+  id         String   @id @default(cuid())
+  projectId  String
+  userId     String
+  action     String   // ContributionAction enum value
+  createdAt  DateTime @default(now())
+  project    Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@index([projectId, userId, createdAt])
+}
+
+model ProjectMember {
+  id               String        @id @default(uuid())
+  project_id       String
+  user_id          String
+  role             MemberRole
+  assigned_subtopic String?
+  section_status   SectionStatus @default(not_started)
+  joined_at        DateTime      @default(now())
+  hasSeenWelcome   Boolean       @default(false)
+
+  // Growth tracker baseline (Feature 5) — recorded 7 days after join
+  growthBaselineLiterature  Int       @default(0)
+  growthBaselineWriting     Int       @default(0)
+  growthBaselineDiscussion  Int       @default(0)
+  growthBaselineCitations   Int       @default(0)
+  growthBaselineSetAt       DateTime?
+
+  project Project @relation(fields: [project_id], references: [id])
+  user    User    @relation(fields: [user_id], references: [id])
+
+  @@unique([project_id, user_id])
+}
+
+model Section {
+  id           String    @id @default(uuid())
+  project_id   String
+  member_id    String
+  subtopic     String
+  content      String    @default("")  // TipTap rich text JSON
+  word_count   Int       @default(0)
+  submitted    Boolean   @default(false)
+  submitted_at DateTime?
+  updated_at   DateTime  @updatedAt
+  versions     Json[]    @default([])
+
+  project Project @relation(fields: [project_id], references: [id])
+  member  User    @relation(fields: [member_id], references: [id])
+
+  @@unique([project_id, member_id])
+}
+
+model ContributorshipLog {
+  id          String             @id @default(uuid())
+  project_id  String
+  user_id     String
+  action      ContributionAction
+  description String
+  timestamp   DateTime           @default(now())
+
+  project Project @relation(fields: [project_id], references: [id])
+  user    User    @relation(fields: [user_id], references: [id])
+}
+
+model ChatMessage {
+  id            String      @id @default(uuid())
+  project_id    String
+  user_id       String?
+  role          String      // "user" | "assistant"
+  content       String
+  context       ChatContext
+  messageType   String?     // "text" | "research_share" | "agent_response"
+  agentAction   String?     // "equation_image" | "table" | "save_latex" | "summarize" | "compare"
+  agentResult   String?     // converted LaTeX output
+  agentStatus   String?     // "pending" | "processed" | "added_to_latex"
+  targetSection String?     // which LaTeX section this maps to
+  attachments   Json        @default("[]")  // [{ url, type, fileName, size }]
+  isAnonymous   Boolean     @default(false) // sender identity hidden from other members
+  created_at    DateTime    @default(now())
+
+  project Project  @relation(fields: [project_id], references: [id])
+  user    User?    @relation(fields: [user_id], references: [id])
+}
+
+model ModerationLog {
+  id         String            @id @default(uuid())
+  content    String
+  user_id    String
+  project_id String
+  context    ModerationContext
+  reason     String
+  timestamp  DateTime          @default(now())
+
+  project Project @relation(fields: [project_id], references: [id])
+  user    User    @relation(fields: [user_id], references: [id])
+}
+
+model FinalOutput {
+  id                       String   @id @default(uuid())
+  project_id               String   @unique
+  merged_content           String   @default("")
+  methodology_disclosure   String   @default("")
+  bias_audit_report        String   @default("")
+  visual_summary_url       String?
+  pdf_url                  String?
+  generated_at             DateTime @default(now())
+
+  project Project @relation(fields: [project_id], references: [id])
+}
+
+model ModerationAlert {
+  id             String   @id @default(uuid())
+  projectId      String
+  reportedUserId String
+  adminId        String
+  messages       Json     // last 10 messages as context
+  flaggedMsg     String
+  reason         String
+  severity       String   // 'low' | 'medium' | 'high'
+  reviewed       Boolean  @default(false)
+  createdAt      DateTime @default(now())
+
+  project Project @relation(fields: [projectId], references: [id])
+
+  @@map("moderation_alerts")
+}
+
+model DocumentChunk {
+  id         String   @id @default(uuid())
+  projectId  String
+  memberId   String
+  fileName   String
+  fileUrl    String
+  chunkIndex Int
+  content    String
+  embedding  Unsupported("vector(384)")?
+  createdAt  DateTime @default(now())
+
+  project Project @relation(fields: [projectId], references: [id])
+
+  @@map("document_chunks")
+}
+
+model Paper {
+  id        String   @id @default(uuid())
+  projectId String
+  title     String
+  authors   String[] @default([])
+  abstract  String?
+  year      Int?
+  arxivId   String?
+  doi       String?
+  url       String?
+  fileUrl   String?
+  status    String   @default("pending") // pending | processing | ready | failed
+  summary   Json?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  tags      String[] @default([])
+
+  project Project @relation(fields: [projectId], references: [id])
+
+  @@map("papers")
+}
+
+model LatexDocument {
+  id                String   @id @default(uuid())
+  project_id        String   @unique
+  format            String   @default("Generic") // IEEE | ACM | Generic
+  template          String   @default("generic")  // "neurips" | "generic" | etc.
+  sections          Json     @default("{}")
+  confirmed_sections String[] @default([])
+  preview           String?  // unsaved agent-generated draft
+  confirmed         Boolean  @default(false)
+  sectionSources    Json     @default("{}")  // { "Introduction": "member_section", ... }
+  figures           Json[]   @default([])   // [{ url, caption, sectionUsedIn }]
+  tables            Json[]   @default([])
+  citations         Json[]   @default([])   // [{ bibKey, title, authors, year, doi }]
+  citationStyle     String   @default("ieee")
+  generated_at      DateTime @default(now())
+  updated_at        DateTime @updatedAt
+
+  project Project @relation(fields: [project_id], references: [id])
+}
+
+model AgentPanelItem {
+  id            String   @id @default(uuid())
+  projectId     String
+  userId        String
+  action        String   // "equation_image" | "save_latex" | "summarize" | "compare" | "table"
+  sourceMessage String
+  result        String
+  context       Json     @default("[]")  // previous results passed as context
+  targetSection String?
+  sharedToChat  Boolean  @default(false)
+  addedToLatex  Boolean  @default(false)
+  createdAt     DateTime @default(now())
+
+  project Project @relation(fields: [projectId], references: [id])
+
+  @@map("agent_panel_items")
+}
+
+model DailyContribution {
+  id        String   @id @default(uuid())
+  projectId String
+  userId    String
+  date      DateTime
+  actions   String[]
+  createdAt DateTime @default(now())
+
+  project Project @relation(fields: [projectId], references: [id])
+  @@unique([projectId, userId, date])
+  @@map("daily_contributions")
+}
+
+model ContributorshipNew {
+  id          String   @id @default(uuid())
+  projectId   String
+  userId      String
+  sectionName String?
+  wordCount   Int      @default(0)
+  humanWords  Int      @default(0)
+  aiWords     Int      @default(0)
+  action      String
+  details     String?
+  createdAt   DateTime @default(now())
+
+  project Project @relation(fields: [projectId], references: [id])
+  @@index([projectId, userId])
+  @@map("contributorship_new")
+}
+
+model LatexAsset {
+  id         String   @id @default(uuid())
+  projectId  String
+  userId     String
+  fileName   String
+  fileType   String   // "image" | "csv" | "pdf"
+  url        String
+  mimeType   String
+  sizeBytes  Int      @default(0)
+  uploadedAt DateTime @default(now())
+
+  project Project @relation(fields: [projectId], references: [id])
+
+  @@map("latex_assets")
+}
+
+model LatexFile {
+  id        String        @id @default(uuid())
+  projectId String
+  fileName  String
+  type      LatexFileType
+  content   String?
+  fileUrl   String?
+  isMain    Boolean       @default(false)
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  project Project @relation(fields: [projectId], references: [id])
+
+  @@unique([projectId, fileName])
+  @@map("latex_files")
+}
+
+// Feature 4 — Milestone Moment Toasts
+// NOTE: DB table already exists. Schema added here for Prisma client codegen.
+model MilestoneAchievement {
+  id         String   @id @default(cuid())
+  projectId  String
+  userId     String
+  milestone  String   // MilestoneType enum value
+  achievedAt DateTime @default(now())
+  project    Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@unique([projectId, userId, milestone])
+  @@index([projectId, userId])
+}
+
+// Feature 6 — Private Reflection Space
+// NOTE: DB table already exists. Schema added here for Prisma client codegen.
+// PRIVACY: Reflections are user-private.
+// Never expose to other users, admins, or AI agents.
+model ReflectionEntry {
+  id          String   @id @default(cuid())
+  projectId   String
+  userId      String
+  promptIndex Int
+  content     String   @db.Text
+  isShared    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@index([projectId, userId, createdAt])
+}
