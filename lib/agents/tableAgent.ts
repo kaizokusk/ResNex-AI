@@ -2,6 +2,10 @@ import { callDeepseekV3 } from '@/lib/llm/deepseek'
 import type { AgentInput, AgentOutput } from './orchestratorAgent'
 
 async function fetchAndParseCSV(url: string): Promise<string> {
+  if (url.startsWith('data:')) {
+    const base64 = url.split(',')[1]
+    return Buffer.from(base64, 'base64').toString('utf-8')
+  }
   const res = await fetch(url)
   return res.text()
 }

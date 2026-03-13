@@ -9,16 +9,32 @@ interface Props {
 type Stage = 'idle' | 'converting' | 'done' | 'error'
 
 export function ConvertButton({ projectId }: Props) {
-  const { setFiles, setCompileStatus } = useLatexStore()
+  const { setFiles, setCompileStatus, localContent, unsavedIds, files } = useLatexStore()
   const [stage, setStage] = useState<Stage>('idle')
   const [msg, setMsg] = useState<string | null>(null)
   const [showConfirm, setShowConfirm] = useState(false)
+
+  // Flush any unsaved cell content to DB before converting — ensures figure/table
+  // cells uploaded just before clicking Convert are not lost from the section file.
+  async function flushUnsaved() {
+    const dirty = files.filter((f) => unsavedIds.has(f.id) && localContent[f.id] !== undefined)
+    await Promise.all(
+      dirty.map((f) =>
+        fetch(`/api/projects/${projectId}/latex/files/${f.id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ content: localContent[f.id] }),
+        })
+      )
+    )
+  }
 
   async function runConvert(compileAfter: boolean) {
     setShowConfirm(false)
     setStage('converting')
     setMsg(null)
     try {
+      await flushUnsaved()
       const res = await fetch(`/api/projects/${projectId}/latex/convert`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

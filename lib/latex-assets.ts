@@ -26,7 +26,7 @@ export function sanitizeLatexAssetFileName(fileName: string) {
 }
 
 export function toLatexGraphicPath(fileName: string) {
-  return `\\detokenize{${fileName}}`
+  return fileName
 }
 
 export function rewriteLatexAssetPaths(content: string, assetPathMap: Map<string, string>) {
@@ -34,12 +34,7 @@ export function rewriteLatexAssetPaths(content: string, assetPathMap: Map<string
 
   for (const [originalPath, rewrittenPath] of assetPathMap.entries()) {
     if (originalPath === rewrittenPath) continue
-
     const escapedOriginal = originalPath.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-    next = next.replace(
-      new RegExp(`\\\\detokenize\\{${escapedOriginal}\\}`, 'g'),
-      `\\\\detokenize{${rewrittenPath}}`
-    )
     next = next.replace(new RegExp(escapedOriginal, 'g'), rewrittenPath)
   }
 
@@ -49,12 +44,13 @@ export function rewriteLatexAssetPaths(content: string, assetPathMap: Map<string
 export function normalizeLatexForCompile(content: string, assetPathMap: Map<string, string>) {
   let next = rewriteLatexAssetPaths(content, assetPathMap)
 
+  // Rewrite includegraphics paths using the asset map — plain path, no \detokenize wrapper
   next = next.replace(
     /\\includegraphics(\[[^\]]*\])?\{([^}]+)\}/g,
     (_match, options = '', rawPath) => {
       const trimmedPath = rawPath.trim()
       const rewrittenPath = assetPathMap.get(trimmedPath) ?? trimmedPath
-      return `\\includegraphics${options}{\\detokenize{${rewrittenPath}}}`
+      return `\\includegraphics${options}{${rewrittenPath}}`
     }
   )
 

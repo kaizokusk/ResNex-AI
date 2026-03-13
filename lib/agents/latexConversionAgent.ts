@@ -63,7 +63,8 @@ export async function cellToLatex(cell: Cell, sectionName: string): Promise<stri
     }
 
     case 'table': {
-      const cols = cell.headers.map(() => 'l').join(' ')
+      // tabularx auto-expands columns to fill line width (inspired by ai-latex-editor)
+      const cols = `{\\linewidth}{${cell.headers.map(() => 'X').join(' ')}}`
       const headerRow = cell.headers.map(escapeLatex).join(' & ') + ' \\\\'
       const dataRows = cell.rows.map((r) => r.map(escapeLatex).join(' & ') + ' \\\\').join('\n')
       const cap = escapeLatex(cell.caption || '')
@@ -73,20 +74,22 @@ export async function cellToLatex(cell: Cell, sectionName: string): Promise<stri
         '\\centering',
         `\\caption{${cap}}`,
         `\\label{${label}}`,
-        `\\begin{tabular}{${cols}}`,
+        `\\begin{tabularx}${cols}`,
         '\\toprule',
         headerRow,
         '\\midrule',
         dataRows,
         '\\bottomrule',
-        '\\end{tabular}',
+        '\\end{tabularx}',
         '\\end{table}',
       ].join('\n')
     }
 
     case 'equation': {
       const label = cell.label ? `\n\\label{${cell.label}}` : ''
-      return `\\begin{equation}${label}\n${cell.formula}\n\\end{equation}`
+      // Use align for multi-line equations (containing \\), equation for single-line
+      const env = cell.formula.includes('\\\\') ? 'align' : 'equation'
+      return `\\begin{${env}}${label}\n${cell.formula}\n\\end{${env}}`
     }
 
     case 'citation': {

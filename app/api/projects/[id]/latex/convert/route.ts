@@ -84,23 +84,18 @@ export async function POST(req: NextRequest, { params }: Params) {
       create: { projectId: id, fileName: 'main.tex', type: 'CODE', content: mainTex, isMain: true },
     })
 
-    // Optionally trigger compile
+    // Optionally trigger compile — delegate to the dedicated compile endpoint
     let compileResult = null
     if (compileAfter) {
-      const compilerUrl = process.env.LATEX_COMPILER_URL
-      if (compilerUrl) {
-        try {
-          const encoded = encodeURIComponent(mainTex)
-          const cr = await fetch(`${compilerUrl.replace(/\/$/, '')}/compile?text=${encoded}`)
-          if (cr.ok && (cr.headers.get('content-type') || '').includes('application/pdf')) {
-            const buf = await cr.arrayBuffer()
-            const pdfDataUrl = `data:application/pdf;base64,${Buffer.from(buf).toString('base64')}`
-            await prisma.project.update({ where: { id }, data: { pdfUrl: pdfDataUrl } })
-            compileResult = { success: true, pdfUrl: pdfDataUrl }
-          }
-        } catch {
-          compileResult = { success: false }
-        }
+      try {
+        const origin = process.env.NEXT_PUBLIC_URL || 'http://localhost:3000'
+        const cr = await fetch(`${origin}/api/projects/${id}/latex/compile`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+        })
+        compileResult = await cr.json()
+      } catch {
+        compileResult = { success: false }
       }
     }
 

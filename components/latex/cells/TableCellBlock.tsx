@@ -1,4 +1,5 @@
 'use client'
+import { useRef, useState } from 'react'
 import { TableCell } from '../../../lib/cell-types'
 
 interface Props {
@@ -9,7 +10,37 @@ interface Props {
   inferring: boolean
 }
 
+function parseCSV(text: string): { headers: string[]; rows: string[][] } {
+  const lines = text.trim().split(/\r?\n/).filter(Boolean)
+  if (lines.length === 0) return { headers: [], rows: [] }
+  const split = (line: string) => line.split(',').map(c => c.replace(/^"|"$/g, '').trim())
+  const headers = split(lines[0])
+  const rows = lines.slice(1).map(split)
+  return { headers, rows }
+}
+
 export function TableCellBlock({ cell, onChange, onFocus, onInfer, inferring }: Props) {
+  const csvRef = useRef<HTMLInputElement>(null)
+  const [csvError, setCsvError] = useState('')
+
+  function handleCSVImport(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setCsvError('')
+    const reader = new FileReader()
+    reader.onload = () => {
+      try {
+        const { headers, rows } = parseCSV(reader.result as string)
+        if (headers.length === 0) { setCsvError('CSV appears empty.'); return }
+        onChange({ ...cell, headers, rows: rows.length > 0 ? rows : [headers.map(() => '')] })
+      } catch {
+        setCsvError('Failed to parse CSV.')
+      }
+    }
+    reader.onerror = () => setCsvError('Failed to read file.')
+    reader.readAsText(file)
+    e.target.value = ''
+  }
   function updateHeader(col: number, value: string) {
     const headers = [...cell.headers]
     headers[col] = value
@@ -52,6 +83,20 @@ export function TableCellBlock({ cell, onChange, onFocus, onInfer, inferring }: 
 
   return (
     <div className="space-y-2" onClick={onFocus}>
+      {/* CSV import */}
+      <div className="flex items-center gap-2">
+        <button
+          onClick={() => csvRef.current?.click()}
+          className="flex items-center gap-1.5 text-[11px] font-medium text-[#7a839a] hover:text-[#7c6af5] border border-[#252a38] hover:border-[#7c6af5] rounded-lg px-2.5 py-1 transition-colors"
+          title="Import CSV file to populate table"
+        >
+          <span>📂</span>
+          <span>Import CSV</span>
+        </button>
+        {csvError && <p className="text-[11px] text-[#f87171]">{csvError}</p>}
+      </div>
+      <input ref={csvRef} type="file" accept=".csv,text/csv" className="hidden" onChange={handleCSVImport} />
+
       {/* Caption */}
       <input
         type="text"

@@ -15,20 +15,25 @@ interface Props {
 export function FigureCellBlock({ cell, onChange, onFocus, onInfer, inferring }: Props) {
   const fileRef = useRef<HTMLInputElement>(null)
   const [uploading, setUploading] = useState(false)
+  const [uploadError, setUploadError] = useState('')
 
   async function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     if (!file) return
     setUploading(true)
+    setUploadError('')
+    const sanitizedName = sanitizeLatexAssetFileName(`figures/${file.name}`)
     try {
       const [uploaded] = await uploadFiles('latexAsset', { files: [file] })
-      onChange({
-        ...cell,
-        fileUrl: uploaded.url,
-        fileName: sanitizeLatexAssetFileName(`figures/${file.name}`),
-      })
-    } catch (err: any) {
-      alert(err?.message || 'Upload failed')
+      onChange({ ...cell, fileUrl: uploaded.url, fileName: sanitizedName })
+    } catch {
+      // Uploadthing unavailable — fall back to base64 data URL so the cell works locally
+      const reader = new FileReader()
+      reader.onload = () => {
+        onChange({ ...cell, fileUrl: reader.result as string, fileName: sanitizedName })
+      }
+      reader.onerror = () => setUploadError('Failed to read image file.')
+      reader.readAsDataURL(file)
     } finally {
       setUploading(false)
       e.target.value = ''
@@ -60,6 +65,9 @@ export function FigureCellBlock({ cell, onChange, onFocus, onInfer, inferring }:
         </button>
       )}
       <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleUpload} />
+      {uploadError && (
+        <p className="text-[11px] text-[#f87171]">{uploadError}</p>
+      )}
 
       {/* Caption */}
       <input

@@ -13,12 +13,7 @@ export async function classifyInput(input: AgentInput): Promise<string> {
   if (message.includes('doi:') || message.includes('arxiv.org')) return 'citation'
   if (attachments.length === 0 && !looksLikeTable(message)) return 'text'
   if (attachments.some(a => a.type === 'image')) {
-    const prompt = `Look at this context and classify what type of content this is.
-Message: "${message}"
-File name: "${attachments[0].fileName}"
-Return ONLY one word: equation | table | figure`
-    const classification = await callDeepseekR1(prompt)
-    return classification.trim().toLowerCase()
+    return 'figure'
   }
   if (looksLikeTable(message)) return 'table'
   return 'text'

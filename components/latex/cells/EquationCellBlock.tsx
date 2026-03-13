@@ -28,7 +28,15 @@ export function EquationCellBlock({ cell, onChange, onFocus, onAutofill, autofil
       </div>
       {cell.formula && (
         <p className="text-[10px] text-[#3d4558] px-1">
-          Will render as: <code className="text-[#7c6af5]">\begin{'{'+'equation'+'}'}{cell.formula}\end{'{'+'equation'+'}'}</code>
+          Will render as:{' '}
+          <code className="text-[#7c6af5]">
+            {cell.formula.includes('\\\\')
+              ? `\\begin{align}${cell.formula}\\end{align}`
+              : `\\begin{equation}${cell.formula}\\end{equation}`}
+          </code>
+          {cell.formula.includes('\\\\') && (
+            <span className="ml-2 text-[#7c6af5] opacity-60">multi-line (align)</span>
+          )}
         </p>
       )}
       <input

@@ -78,13 +78,6 @@ export default function AdminPage() {
     { label: 'LaTeX', href: `/project/${id}/latex`, icon: 'τ' },
     { label: 'Output', href: `/project/${id}/output`, icon: '⬇' },
     { label: 'Admin ⚙', href: `/project/${id}/admin`, icon: '⚙' },
-    { label: 'Overview', href: `/project/${id}` },
-    { label: 'Chat', href: `/project/${id}/chat` },
-    { label: 'Discover', href: `/project/${id}/discover` },
-    { label: 'Library', href: `/project/${id}/library` },
-    { label: 'Agents', href: `/project/${id}/agents` },
-    { label: 'LaTeX', href: `/project/${id}/latex` },
-    { label: 'Admin ⚙', href: `/project/${id}/admin` },
   ]
 
   return (

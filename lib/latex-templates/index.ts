@@ -49,6 +49,7 @@ const IEEE: LatexTemplate = {
 \\usepackage{amsmath,amssymb,amsfonts}
 \\usepackage{algorithmic}
 \\usepackage{graphicx}
+\\usepackage{tabularx}
 \\usepackage{textcomp}
 \\usepackage{xcolor}
 \\usepackage{booktabs}
@@ -115,6 +116,7 @@ const ACM: LatexTemplate = {
   ],
   mainTexSkeleton: `\\documentclass[sigconf]{acmart}
 \\usepackage{graphicx}
+\\usepackage{tabularx}
 \\usepackage{booktabs}
 \\usepackage{amsmath}
 
@@ -182,6 +184,7 @@ const NEURIPS: LatexTemplate = {
 \\usepackage[preprint]{neurips_2024}
 \\usepackage{amsmath,amssymb}
 \\usepackage{graphicx}
+\\usepackage{tabularx}
 \\usepackage{booktabs}
 \\usepackage{microtype}
 \\usepackage{hyperref}
@@ -252,6 +255,7 @@ const ICML: LatexTemplate = {
 \\usepackage[accepted]{icml2024}
 \\usepackage{amsmath,amssymb,amsfonts}
 \\usepackage{graphicx}
+\\usepackage{tabularx}
 \\usepackage{booktabs}
 \\usepackage{microtype}
 \\usepackage{hyperref}
@@ -323,6 +327,7 @@ const ICLR: LatexTemplate = {
 \\usepackage{iclr2025_conference,times}
 \\usepackage{amsmath,amssymb}
 \\usepackage{graphicx}
+\\usepackage{tabularx}
 \\usepackage{booktabs}
 \\usepackage{microtype}
 \\usepackage{hyperref}
@@ -392,6 +397,7 @@ const CVPR: LatexTemplate = {
 \\usepackage{times}
 \\usepackage{epsfig}
 \\usepackage{graphicx}
+\\usepackage{tabularx}
 \\usepackage{amsmath}
 \\usepackage{amssymb}
 \\usepackage{booktabs}
@@ -466,6 +472,7 @@ const ACL: LatexTemplate = {
 \\usepackage{latexsym}
 \\usepackage{amsmath}
 \\usepackage{graphicx}
+\\usepackage{tabularx}
 \\usepackage{booktabs}
 \\usepackage{microtype}
 
@@ -536,6 +543,7 @@ const AAAI: LatexTemplate = {
 \\usepackage{helvet}
 \\usepackage{courier}
 \\usepackage{graphicx}
+\\usepackage{tabularx}
 \\usepackage{amsmath}
 \\usepackage{booktabs}
 
@@ -597,6 +605,7 @@ const KDD: LatexTemplate = {
   ],
   mainTexSkeleton: `\\documentclass[sigconf]{acmart}
 \\usepackage{graphicx}
+\\usepackage{tabularx}
 \\usepackage{booktabs}
 \\usepackage{amsmath}
 
@@ -659,6 +668,7 @@ const NATURE: LatexTemplate = {
   ],
   mainTexSkeleton: `\\documentclass{article}
 \\usepackage{graphicx}
+\\usepackage{tabularx}
 \\usepackage{amsmath}
 \\usepackage{natbib}
 \\usepackage{booktabs}
@@ -717,6 +727,7 @@ const THESIS: LatexTemplate = {
   ],
   mainTexSkeleton: `\\documentclass[12pt,a4paper]{report}
 \\usepackage{graphicx}
+\\usepackage{tabularx}
 \\usepackage{amsmath,amssymb}
 \\usepackage{natbib}
 \\usepackage{booktabs}
@@ -791,6 +802,7 @@ const REPORT: LatexTemplate = {
   ],
   mainTexSkeleton: `\\documentclass[12pt,a4paper]{article}
 \\usepackage{graphicx}
+\\usepackage{tabularx}
 \\usepackage{amsmath}
 \\usepackage{natbib}
 \\usepackage{booktabs}
@@ -844,6 +856,7 @@ const BLANK: LatexTemplate = {
   ],
   mainTexSkeleton: `\\documentclass[12pt]{article}
 \\usepackage{graphicx}
+\\usepackage{tabularx}
 \\usepackage{amsmath}
 \\usepackage{booktabs}
 \\usepackage{geometry}

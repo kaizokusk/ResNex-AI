@@ -21,7 +21,21 @@ type CompileAsset = {
   fileUrl: string
 }
 
-async function appendAssetFile(formData: FormData, fileName: string, fileUrl: string) {
+async function appendAssetFile(formData: FormData, fileName: string, fileUrl: string, fieldPath?: string) {
+  // Use "file:PATH" as the field name so the local compiler can reconstruct
+  // subdirectory paths (e.g. figures/image.png) even though fetch/FormData
+  // strips slashes from the filename parameter.
+  const fieldName = fieldPath ? `file:${fieldPath}` : 'files[]'
+
+  // Handle base64 data URLs (fallback when uploadthing is not configured)
+  if (fileUrl.startsWith('data:')) {
+    const [header, base64Data] = fileUrl.split(',')
+    const mimeType = header.replace('data:', '').replace(';base64', '')
+    const buffer = Buffer.from(base64Data, 'base64')
+    formData.append(fieldName, new Blob([buffer], { type: mimeType }), fileName)
+    return
+  }
+
   let assetUrl: URL
 
   try {
@@ -43,7 +57,7 @@ async function appendAssetFile(formData: FormData, fileName: string, fileUrl: st
 
   const contentType = assetRes.headers.get('content-type') || 'application/octet-stream'
   const assetBuffer = await assetRes.arrayBuffer()
-  formData.append('files[]', new Blob([assetBuffer], { type: contentType }), fileName)
+  formData.append(fieldName, new Blob([assetBuffer], { type: contentType }), fileName)
 }
 
 export async function POST(_req: NextRequest, { params }: Params) {
@@ -55,7 +69,7 @@ export async function POST(_req: NextRequest, { params }: Params) {
     const member = await prisma.projectMember.findFirst({ where: { project_id: id, user_id: user.id } })
     if (!member) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
-    const compilerUrl = process.env.LATEX_COMPILER_URL
+    const compilerUrl = process.env.LATEX_COMPILER_URL || process.env.LATEX_COMPILE_URL
     if (!compilerUrl) {
       return NextResponse.json({
         success: false,
@@ -115,19 +129,22 @@ export async function POST(_req: NextRequest, { params }: Params) {
     for (const file of compileFiles) {
       const originalContent = file.fileName === mainFile.fileName ? compileReady.mainTex : (file.content ?? '')
       const rewrittenContent = normalizeLatexForCompile(originalContent, assetPathMap)
-      formData.append('files[]', new Blob([rewrittenContent], { type: 'text/plain' }), file.fileName)
+      // Use "file:PATH" as field name so the server can reconstruct subdirectory paths
+      // regardless of fetch/FormData stripping slashes from the filename parameter.
+      formData.append(`file:${file.fileName}`, new Blob([rewrittenContent], { type: 'text/plain' }), file.fileName)
     }
 
     for (const file of compileReady.files) {
       const rewrittenContent = normalizeLatexForCompile(file.content, assetPathMap)
-      formData.append('files[]', new Blob([rewrittenContent], { type: 'text/plain' }), file.fileName)
+      formData.append(`file:${file.fileName}`, new Blob([rewrittenContent], { type: 'text/plain' }), file.fileName)
     }
 
     try {
       await Promise.all(
-        assetFiles.map((file) =>
-          appendAssetFile(formData, assetPathMap.get(file.fileName) ?? file.fileName, file.fileUrl)
-        )
+        assetFiles.map((file) => {
+          const dest = assetPathMap.get(file.fileName) ?? file.fileName
+          return appendAssetFile(formData, dest, file.fileUrl, dest)
+        })
       )
     } catch (error: any) {
       return NextResponse.json({
@@ -152,7 +169,17 @@ export async function POST(_req: NextRequest, { params }: Params) {
     }
 
     if (compileRes.status === 404) {
-      const encoded = encodeURIComponent(compileReady.mainTex)
+      // GET fallback (e.g. latexonline.cc) — strip \includegraphics lines so the URI stays small
+      // and the document compiles without images rather than returning 414.
+      let fallbackTex = compileReady.mainTex
+      let imagesStripped = false
+      if (assetFiles.length > 0) {
+        fallbackTex = fallbackTex
+          .replace(/\\begin\{figure\}[\s\S]*?\\end\{figure\}/g, '% [figure omitted — images not supported by GET compiler]')
+          .replace(/\\includegraphics(\[.*?\])?\{[^}]*\}/g, '% [image omitted]')
+        imagesStripped = true
+      }
+      const encoded = encodeURIComponent(fallbackTex)
       try {
         compileRes = await fetch(`${compilerUrl.replace(/\/$/, '')}/compile?text=${encoded}`, {
           method: 'GET',
@@ -163,6 +190,10 @@ export async function POST(_req: NextRequest, { params }: Params) {
           pdfUrl: null,
           logs: `Failed to reach compiler at ${compilerUrl}: ${err.message}`,
         })
+      }
+      if (imagesStripped) {
+        // Tag the response so we can append a warning to the logs later
+        ;(compileRes as any)._imagesStripped = true
       }
     }
 
@@ -176,7 +207,10 @@ export async function POST(_req: NextRequest, { params }: Params) {
 
       await prisma.project.update({ where: { id }, data: { pdfUrl: pdfDataUrl } })
 
-      return NextResponse.json({ success: true, pdfUrl: pdfDataUrl, logs: 'Compiled successfully.' })
+      const compileLogs = (compileRes as any)._imagesStripped
+        ? 'Compiled successfully. Note: images were omitted because the GET fallback compiler (e.g. latexonline.cc) does not support file uploads. To include images, configure a compiler that accepts multipart/form-data (set LATEX_COMPILER_URL to your self-hosted pdflatex server).'
+        : 'Compiled successfully.'
+      return NextResponse.json({ success: true, pdfUrl: pdfDataUrl, logs: compileLogs })
     }
 
     // If compiler returned an error page or non-PDF
