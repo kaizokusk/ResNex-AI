@@ -220,3 +220,7 @@ researchcollab/
 | AI | Anthropic Claude (`claude-sonnet-4-20250514`) |
 | Rich text editor | TipTap |
 | File uploads | Uploadthing |
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
