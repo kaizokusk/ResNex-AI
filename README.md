@@ -221,6 +221,15 @@ researchcollab/
 | Rich text editor | TipTap |
 | File uploads | Uploadthing |
 
+
+---
+## Demo video link
+
+
+[Youtube Demo link](https://youtu.be/tUkr_yNPCC8?si=8PR_ctxhPM0J0t_Z)
+
+---
+
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
