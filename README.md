@@ -4,7 +4,7 @@ AI-powered collaborative content creation and knowledge curation platform for ST
 
 Built for **Grand Challenge 1: AI Agents for Collaborative Content Creation and Knowledge Curation** (STEM AI Hackathon 2026).
 
-ResearchCollab helps student teams collaboratively create, organize, synthesize, and share STEM knowledge with:
+ResNex-AI helps student teams collaboratively create, organize, synthesize, and share STEM knowledge with:
 - multi-user writing workspaces (rich-text + LaTeX)
 - AI agents for research, planning, quality feedback, and synthesis
 - structured curation (papers, tags, citations) and exportable outputs
@@ -57,7 +57,7 @@ This repository is organized around the expected solution components:
 - **User study (minimum 5 test users)**: test onboarding → co-authoring → peer review → merge/export; capture task time, friction points, and perceived usefulness
 - **Comparison with existing tools** (Google Docs / Notion / Overleaf): use this checklist for a short write-up
 
-| Capability | ResearchCollab | Google Docs | Notion | Overleaf |
+| Capability | ResNex-AI | Google Docs | Notion | Overleaf |
 |---|---:|---:|---:|---:|
 | Multi-user editing | ✅ | ✅ | ✅ | ✅ |
 | Section ownership + peer review | ✅ | ◻︎ | ◻︎ | ◻︎ |
@@ -178,7 +178,7 @@ Open [http://localhost:3000](http://localhost:3000)
 ## Project structure
 
 ```
-researchcollab/
+ResNex-AI/
 ├── app/
 │   ├── login/              # OTP login page
 │   ├── dashboard/          # Project list + sidebar
